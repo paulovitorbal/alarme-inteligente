@@ -1,6 +1,7 @@
 # This is a sample Python script.
 import time
 from math import floor
+from typing import List
 
 DURACAO_SONECA = 5
 
@@ -10,13 +11,14 @@ class Alarm:
     soneca_ativada = False
     alarme = None
 
-    def __init__(self, horas: int, minutos: int):
+    def __init__(self, horas: int, minutos: int, dias_da_semana):
         if horas > 23 or horas < 0:
             raise Exception('horas em formato invalido: {}', horas)
         if minutos > 59 or minutos < 0:
             raise Exception('minutos em formato invalido: {}', minutos)
         self.horas = horas
         self.minutos = minutos
+        self.dias_da_semana = dias_da_semana
         self.reset()
 
     def reset(self):
@@ -28,21 +30,21 @@ class Alarm:
         self.soneca_ativada = True
         self.alarme = self.alarme + DURACAO_SONECA
 
-    def debug(self, horario_atual:int ):
+    def debug(self, horario_atual: int, dia_da_semana):
         h = get_string_from_minutos(horario_atual)
         a = get_string_from_minutos(self.alarme)
         print(
-            f"horario [{h}] alarme [{a}] disparado [{self.disparado}] soneca [{self.soneca_ativada}]"
+            f"horario [{h}] alarme [{a}] dow [{dia_da_semana}] disparado [{self.disparado}] soneca [{self.soneca_ativada}]"
         )
 
-    def match(self, horario_atual: int):
-        if self.alarme == horario_atual:
+    def match(self, horario_atual: int, dia_da_semana):
+        if self.alarme == horario_atual and dia_da_semana in self.dias_da_semana:
             self.disparado = True
             self.soneca_ativada = False
-            self.debug(horario_atual)
+            self.debug(horario_atual, dia_da_semana)
             return True
 
-        self.debug(horario_atual)
+        self.debug(horario_atual, dia_da_semana)
         return False
 
 
@@ -63,9 +65,12 @@ def get_minutos_from_horas_minutos(horas: int, minutos: int):
 if __name__ == '__main__':
     print('PyCharm')
     print(time.localtime())
-    alarme = Alarm(20, 21)
-    while not alarme.disparado:
-        alarme.match(get_minutos_from_time(time.localtime()))
-        time.sleep(10)
+    alarmes = [Alarm(16, 34, [0, 1, 2, 3, 4])]
+    while True:
+        for alarme in alarmes:
+            alarme.match(get_minutos_from_time(time.localtime()), time.localtime()[6])
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        time.sleep(1)
+
+#check https://awesome-micropython.com/
+#https://gitlab.com/WiLED-Project/ubutton
