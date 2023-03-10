@@ -9,12 +9,22 @@ class Alarme:
     soneca_ativada = False
     alarme = None
     skip = False
+    debug_enabled = False
+
+    def set_debug(self, debug: bool):
+        self.debug_enabled = debug
 
     def __init__(self, horas: int, minutos: int, dias_da_semana):
+        errors = ""
+        for index, dds in enumerate(dias_da_semana):
+            if dds < 1 or dds > 7:
+                errors = errors + f"Dia da semana invalido: [{dds}] na posicao [{index}]. "
+        if errors != "":
+            raise Exception(errors)
         if horas > 23 or horas < 0:
-            raise Exception('horas em formato invalido: {}', horas)
+            raise Exception(f"horas em formato invalido: {horas}")
         if minutos > 59 or minutos < 0:
-            raise Exception('minutos em formato invalido: {}', minutos)
+            raise Exception(f"minutos em formato invalido: {minutos}")
         self.horas = horas
         self.minutos = minutos
         self.dias_da_semana = dias_da_semana
@@ -29,21 +39,23 @@ class Alarme:
     def soneca(self):
         self.soneca_ativada = True
         self.alarme = self.alarme + DURACAO_SONECA
-    
+
     def cancelar_alarme(self):
         self.reset()
         self.skip = True
 
     def debug(self, horario_atual: int, dia_da_semana):
-        h = get_string_from_minutos(horario_atual)
-        a = get_string_from_minutos(self.alarme)
-        print(f"horario [{h}] alarme [{a}] dow [{dia_da_semana}] disparado [{self.disparado}] soneca [{self.soneca_ativada}] skip[{self.skip}]")
-    
+        if self.debug_enabled is True:
+            h = get_string_from_minutos(horario_atual)
+            a = get_string_from_minutos(self.alarme)
+            print(
+                f"horario [{h}] alarme [{a}] dow [{dia_da_semana}] disparado [{self.disparado}] soneca [{self.soneca_ativada}] skip[{self.skip}]")
+
     def tocar(self):
-        if self.disparado == True and self.soneca_ativada == False:
+        if self.disparado is True and self.soneca_ativada is False:
             return True
         return False
-    
+
     def match(self, horario_atual: int, dia_da_semana):
         # horario de inicio do alarme
         if self.alarme == horario_atual and dia_da_semana in self.dias_da_semana and self.skip == False:
@@ -52,18 +64,20 @@ class Alarme:
             self.soneca_ativada = False
             self.debug(horario_atual, dia_da_semana)
             return True
-        
+
         if self.alarme != horario_atual and self.skip:
             self.skip = False
-            
-        #alarme tocou por 5 minutos sem interação -> desligar
-        if self.disparado and self.soneca_ativada == False and horario_atual >= (self.disparado_em+DURACAO_SONECA):
+
+        # alarme tocou por 5 minutos sem interação -> desligar
+        if self.disparado and self.soneca_ativada == False and horario_atual >= (self.disparado_em + DURACAO_SONECA):
             self.reset()
-            
+
         self.debug(horario_atual, dia_da_semana)
         return False
-    def toString(self):
-        return f'horas[{self.horas}] minutos[{self.minutos}] dia da semana[{self.dias_da_semana}]'    
+
+    def to_string(self):
+        return f'horas[{self.horas}] minutos[{self.minutos}] dia da semana[{self.dias_da_semana}]'
+
 
 def get_string_from_minutos(minutos: int):
     horas, minutos = divmod(minutos, 60)
@@ -87,5 +101,5 @@ def get_minutos_from_horas_minutos(horas: int, minutos: int):
 # 
 #         time.sleep(1)
 
-#check https://awesome-micropython.com/
-#https://gitlab.com/WiLED-Project/ubutton
+# check https://awesome-micropython.com/
+# https://gitlab.com/WiLED-Project/ubutton
