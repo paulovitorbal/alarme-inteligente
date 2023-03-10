@@ -98,10 +98,10 @@ def sincronizar_relogio():
         display_text("S Ok", 1)
         
     display_text("S Al", 1)
-    response = urequests.get(url="https://gist.githubusercontent.com/paulovitorbal/67ab9bbd2787fd4a46096ede8e51b746/raw/5a3fc772e5cbbf41f90bb8d1eff84191f5e30c5a/alarme.json")
-    print(response)
+    response = urequests.get(url="http://192.168.1.214:8001/alarme.json")
+    print(response.text)
     jsonObject = response.json()
-    #alarme.Alarme(06, 00, [0, 1, 2, 3, 4])
+    lista_alarmes.clear()
     for al in jsonObject["alarmes"]:
         a = alarme.Alarme(al["h"], al["m"], al["dow"])
         print(a.toString())
@@ -129,8 +129,6 @@ def display_time():
         hora = rtc.getHour()
         minuto = rtc.getMinutes()
         display.fill(0)
-        display.pixel(16,0,1)
-        display.pixel(15,0,1)
         display.text(f'{hora:02d}',-1,1,1)
         display.text(f'{minuto:02d}',17,1,1)  
         if tick :            
@@ -176,7 +174,7 @@ def soar_alarme():
             alarme_ativo = True
     
     if alarme_ativo:
-        speaker.beep(n=5, on_time=0.3)
+        speaker.beep(n=1, on_time=0.1)
 
 def acionar_botao_soneca():
     global lista_alarmes
@@ -184,13 +182,16 @@ def acionar_botao_soneca():
     for al in lista_alarmes:
         if al.tocar(): #pressionado enquanto o alarme estava ativo -> ativa soneca
             print("soneca ativada")
+            display_text("ZzZz", 1)
             al.soneca()
             alarme_ativo = True
         elif al.soneca_ativada: # pressionado enquanto a soneca estava ativa -> reseta o alarme
             print("reset ativado")
-            al.reset()
+            display_text("Desl", 1)
+            al.cancelar_alarme()
             time.sleep(1)
             alarme_ativo = True
+            
     if (alarme_ativo == False):
         for index, al in enumerate(lista_alarmes):
             display.fill(0)
@@ -207,11 +208,12 @@ def acionar_botao_soneca():
         display.show()
 async def verificar_alarme():
     global lista_alarmes
+    print(rtc.getDayOfWeek())
     while True:
         for al in lista_alarmes:
             al.match(alarme.get_minutos_from_horas_minutos(rtc.getHour(), rtc.getMinutes()), rtc.getDayOfWeek())
         soar_alarme()
-        await asyncio.sleep_ms(1000) 
+        await asyncio.sleep_ms(500) 
 
 #limpa o display    
 display.fill(0)
@@ -277,11 +279,8 @@ def main():
     # Run the event loop
     loop.run_forever()
     
-    
-    
-
-    
 if __name__ == '__main__':
+    sincronizar_relogio()
     main()
 
 
