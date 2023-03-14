@@ -51,7 +51,7 @@ def conectar():
     global wlan
     display_text("WiFi", 1)
     ssid = "BPL"
-    password = "familiabpl"
+    password = ""
 
     print("Connecting to:", ssid)
     wlan.active(True)
